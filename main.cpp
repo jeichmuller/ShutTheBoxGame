@@ -17,6 +17,8 @@ using std::vector;
 
 int diceRoll();
 vector<int> getInput(string);
+bool checkBoard(const map<int, bool> &,const vector<int> &);
+void shut(map<int, bool> &, const vector<int> &);
 
 int main(){
 
@@ -34,7 +36,7 @@ int main(){
     // for(auto e = board.begin(); e != board.end(); ++e) cout << e->first << ", " << e->second << endl;
 
     bool game = true;
-    bool works = true;
+
     while(game){
 
         dice1 = diceRoll();
@@ -47,34 +49,38 @@ int main(){
             cout << e.first << ", " << e.second << endl << endl;
         }
         cout << "You rolled " << dice1 << " and " << dice2 << ". What numbers would you like to put down? " << endl;
-
-        while(total != roll && works){
+        cout << "Roll: " << roll << endl;
+        bool valid = true;
+        do{
             string str; 
             getline(cin, str);
-            works = true;
+
+            valid = true;
+            total = 0;
 
             vector<int> numbers;
-
-            numbers = getInput(str);
-            for(auto e: numbers){
-                total += e;
+            int i = 0;
+            for(auto ints: str){
+                if(i == 0 || i % 2 == 0){
+                    numbers.push_back(int(ints) - 48); // convert to using ascii
+                    total += numbers.back();
+                }
+                ++i;
             }
+            
+
             if(total != roll){
                 cout << "Your roll is " << roll << " which does not equal the sum of numbers you input. Try again" << endl;
-            }
-
-            for(auto e: numbers){
-                if(!board[e]){
-                    works = false;
-                    board[e] = true;
-                }
-            }
-            if(!works){
-                cout << "Try again!" << endl;
                 continue;
             }
-        }
-        cout << "total: " << total << endl;
+
+            if(checkBoard(board, numbers)){
+                cout << "Try again!" << endl;
+                continue;
+            }else{
+                shut(board, numbers);
+            }
+        }while(total != roll);
         //cout << "numbers: " << str << endl;
         
     }
@@ -106,4 +112,19 @@ vector<int> getInput(string str){
         }
     }
     return numbers;
+}
+
+bool checkBoard(const map<int, bool> &board,const vector<int> &numbs){
+    for (auto num: numbs){
+        if(board.find(num)->second){
+            return true;
+        }
+    }
+    return false;
+}
+
+void shut(map<int, bool> &board, const vector<int> &numbs){
+    for(auto num: numbs){
+        board.find(num)->second = true;
+    }
 }
