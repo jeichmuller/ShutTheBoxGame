@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <ctype.h>
+#include <sstream>
 
 
 
@@ -14,11 +15,17 @@ using std::cout; using std::cin; using std::endl;
 using std::map;
 using std::string;
 using std::vector;
+using std::isdigit;
 
 int diceRoll();
 vector<int> getInput(string);
 bool checkBoard(const map<int, bool> &,const vector<int> &);
 void shut(map<int, bool> &, const vector<int> &);
+bool getMove( map<int, bool> &board, const string &str, int roll);
+void print(const map<int, bool> &board);
+bool possibleMove(const map<int, bool> &, int );
+bool findComb(const vector<int> &remainingInt, int roll, int sum, size_t start);
+bool win(const map<int, bool> &board);
 
 int main(){
 
@@ -29,74 +36,80 @@ int main(){
     dice1 = diceRoll();
     dice2 = diceRoll();
 
-    // cout << "dice1: " << dice1 << ", dice2: " << dice2 << endl;
 
     map<int, bool> board = {{1, false}, {2, false}, {3, false}, {4, false}, {5, false}, {6, false}, {7, false}, {8, false}, {9, false}};
     
-    // for(auto e = board.begin(); e != board.end(); ++e) cout << e->first << ", " << e->second << endl;
 
     bool game = true;
 
     while(game){
-
         dice1 = diceRoll();
         dice2 = diceRoll();
 
         int roll = dice1 + dice2;
+        if(!possibleMove(board, roll)){
+            continue;
+        }
         int total = 0;
 
-        for (auto e: board){
-            cout << e.first << ", " << e.second << endl << endl;
-        }
+        print(board);
         cout << "You rolled " << dice1 << " and " << dice2 << ". What numbers would you like to put down? " << endl;
         cout << "Roll: " << roll << endl;
         bool valid = true;
         do{
             string str; 
             getline(cin, str);
-
-            valid = true;
-            total = 0;
-
-            vector<int> numbers;
-            int i = 0;
-            for(auto ints: str){
-                if(i == 0 || i % 2 == 0){
-                    numbers.push_back(int(ints) - 48); // convert to using ascii
-                    total += numbers.back();
+            // Still need to prevent choosing double the same number to put down
+            if(!getMove(board, str, roll)){
+                cout << "Give new numbers, needs to equal " << roll << endl;
+                valid = false;
+            }else {
+                valid = true;
+                if(win(board)){
+                    cout << "Congratulations you won!" << endl;
+                    game = false;
+                    break;
                 }
-                ++i;
+                cout << "The board: " << endl;
             }
-            
-
-            if(total != roll){
-                cout << "Your roll is " << roll << " which does not equal the sum of numbers you input. Try again" << endl;
-                continue;
-            }
-
-            if(checkBoard(board, numbers)){
-                cout << "Try again!" << endl;
-                continue;
-            }else{
-                shut(board, numbers);
-            }
-        }while(total != roll);
-        //cout << "numbers: " << str << endl;
+        }while(!valid);
         
     }
-
-
-
-
-
-
-
 
 }
 
 
+bool possibleMove(const map<int, bool> &board, int roll){
+    vector<int> remainingInt;
 
+    for(auto e: board){
+        if(!e.second){
+            remainingInt.push_back(e.first);
+        }
+    }
 
+    if(findComb(remainingInt, roll,0,0)){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+bool findComb(const vector<int> &remainingInt, int roll, int sum = 0, size_t start = 0){
+    if (sum == roll) {
+        return true;
+    }
+
+    if (sum > roll || start >= remainingInt.size()) {
+        return false;
+    }
+
+    if (findComb(remainingInt, roll, sum + remainingInt[start], start + 1)) {
+        return true;
+    }
+
+    return findComb(remainingInt, roll, sum, start + 1);
+}
 
 int diceRoll() {
     return rand() % 6 + 1;
@@ -114,7 +127,7 @@ vector<int> getInput(string str){
     return numbers;
 }
 
-bool checkBoard(const map<int, bool> &board,const vector<int> &numbs){
+bool checkBoard(const map<int, bool> &board, const vector<int> &numbs){
     for (auto num: numbs){
         if(board.find(num)->second){
             return true;
@@ -123,8 +136,50 @@ bool checkBoard(const map<int, bool> &board,const vector<int> &numbs){
     return false;
 }
 
+bool win(const map<int, bool> &board){
+    int total = 0;
+    for(auto i: board){
+        if(!i.second){
+            total += i.first;
+        }
+    }
+    return total == 0;
+}
+
 void shut(map<int, bool> &board, const vector<int> &numbs){
     for(auto num: numbs){
         board.find(num)->second = true;
+    }    
+}
+
+bool getMove(map<int, bool> &board, const string &str, int roll){
+    int total = 0;
+    vector<int> numbers;
+
+    for(char ch: str){
+        if(isdigit(ch)){
+            numbers.push_back(ch - '0');
+            total += ch - '0';
+        }
+    }
+    if(total != roll){
+        cout << "You're input does not equal the roll (roll: " << roll << ", total you entered: " << total << ")." << endl;
+        return false; 
+    }
+    if(checkBoard(board, numbers)){
+        cout << "You're move is not valid!" << endl;
+        return false;
+    }else{
+        shut(board, numbers);
+        return true;
+    }
+
+}
+
+void print(const map<int, bool> &board){
+    for (auto e: board){
+        cout << e.first << ", ";
+        e.second ? cout << "Down" : cout << "Up";
+        cout << endl;
     }
 }
