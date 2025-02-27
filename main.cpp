@@ -6,16 +6,15 @@
 #include <ctime>
 #include <string>
 #include <vector>
-#include <ctype.h>
-#include <sstream>
-
-
+#include <cctype>
+#include <numeric>
 
 using std::cout; using std::cin; using std::endl;
 using std::map;
 using std::string;
 using std::vector;
 using std::isdigit;
+using std::accumulate;
 
 int diceRoll();
 vector<int> getInput(string);
@@ -78,7 +77,7 @@ int main(){
 
 }
 
-
+// Checks if there are any moves the user can currently make with a given roll
 bool possibleMove(const map<int, bool> &board, int roll){
     vector<int> remainingInt;
 
@@ -95,6 +94,7 @@ bool possibleMove(const map<int, bool> &board, int roll){
     }
 }
 
+// Checks if theres a combination of remaining integers that can equal the roll
 bool findComb(const vector<int> &remainingInt, int roll, int sum = 0, size_t start = 0){
     if (sum == roll) {
         return true;
@@ -111,11 +111,12 @@ bool findComb(const vector<int> &remainingInt, int roll, int sum = 0, size_t sta
     return findComb(remainingInt, roll, sum, start + 1);
 }
 
+// Rolls dice, 1-6
 int diceRoll() {
     return rand() % 6 + 1;
 }
 
-
+// Takes users string input and breaks it up to integers
 vector<int> getInput(string str){
     vector<int> numbers;
     for (int i = 0; i < str.length(); ++i){
@@ -127,6 +128,7 @@ vector<int> getInput(string str){
     return numbers;
 }
 
+// Determines whether given move is valid in the board
 bool checkBoard(const map<int, bool> &board, const vector<int> &numbs){
     for (auto num: numbs){
         if(board.find(num)->second){
@@ -136,22 +138,22 @@ bool checkBoard(const map<int, bool> &board, const vector<int> &numbs){
     return false;
 }
 
+// Returns true if all elements of board are true
 bool win(const map<int, bool> &board){
-    int total = 0;
-    for(auto i: board){
-        if(!i.second){
-            total += i.first;
-        }
-    }
-    return total == 0;
+    return accumulate(board.begin(), board.end(), true, [](bool result, const std::pair<const int, bool>& p) {
+        return result && p.second; // return for lambda
+    });
 }
 
+// Puts the selected numbers down
 void shut(map<int, bool> &board, const vector<int> &numbs){
     for(auto num: numbs){
         board.find(num)->second = true;
     }    
 }
 
+// Takes players move and checks whether it is legal or not, if legal will invoke shut(),
+// else will return false allowing user to give new move
 bool getMove(map<int, bool> &board, const string &str, int roll){
     int total = 0;
     vector<int> numbers;
@@ -176,6 +178,7 @@ bool getMove(map<int, bool> &board, const string &str, int roll){
 
 }
 
+// Prints the board
 void print(const map<int, bool> &board){
     for (auto e: board){
         cout << e.first << ", ";
