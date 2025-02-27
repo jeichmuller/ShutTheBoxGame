@@ -164,10 +164,28 @@ bool getMove(map<int, bool> &board, const string &str, int roll){
             total += ch - '0';
         }
     }
+
+    // Checking for duplicate entries
+    // Ex: roll of 8, cannot be satisfied by "4 4", since theres only one 4 tile
+    std::map<int, int> countMap;
+    for(int num : numbers){
+        ++countMap[num];
+    }
+    // If any number is used more than once, return false
+    for (const auto& entry : countMap) {
+        if (entry.second > 1) {
+            cout << "You cannot use any numbers more than once!" << endl;
+            return false;
+        }
+    }
+    
+
+    // If move total doesn't equal the roll total, not valid
     if(total != roll){
         cout << "You're input does not equal the roll (roll: " << roll << ", total you entered: " << total << ")." << endl;
         return false; 
     }
+    // If the move cannot be done using the board
     if(checkBoard(board, numbers)){
         cout << "You're move is not valid!" << endl;
         return false;
