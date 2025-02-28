@@ -8,6 +8,7 @@
 #include <vector>
 #include <cctype>
 #include <numeric>
+#include <sstream>
 
 using std::cout; using std::cin; using std::endl;
 using std::map;
@@ -15,6 +16,7 @@ using std::string;
 using std::vector;
 using std::isdigit;
 using std::accumulate;
+using std::pair; using std::make_pair;
 
 int diceRoll();
 vector<int> getInput(string);
@@ -24,7 +26,7 @@ bool getMove( map<int, bool> &board, const string &str, int roll);
 void print(const map<int, bool> &board);
 bool possibleMove(const map<int, bool> &, int );
 bool findComb(const vector<int> &remainingInt, int roll, int sum, size_t start);
-bool win(const map<int, bool> &board);
+pair<bool, int> win(const map<int, bool> &board);
 
 int main(){
 
@@ -36,7 +38,7 @@ int main(){
     dice2 = diceRoll();
 
 
-    map<int, bool> board = {{1, false}, {2, false}, {3, false}, {4, false}, {5, false}, {6, false}, {7, false}, {8, false}, {9, false}};
+    map<int, bool> board = {{1, false}, {2, false}, {3, false}, {4, false}, {5, false}, {6, false}, {7, false}, {8, false}, {9, false}, {10, false}, {11, false}, {12,false}};
     
 
     bool game = true;
@@ -64,8 +66,10 @@ int main(){
                 valid = false;
             }else {
                 valid = true;
-                if(win(board)){
+                pair<bool, int> p = win(board);
+                if(p.first){
                     cout << "Congratulations you won!" << endl;
+                    cout << "Score of " << p.second << endl;
                     game = false;
                     break;
                 }
@@ -74,7 +78,11 @@ int main(){
         }while(!valid);
         
     }
-
+    pair<bool, int> p = win(board);
+    if(!p.first){
+        cout << "You lost with a score of " << p.second << endl;
+        game = false;
+    }
 }
 
 // Checks if there are any moves the user can currently make with a given roll
@@ -119,11 +127,10 @@ int diceRoll() {
 // Takes users string input and breaks it up to integers
 vector<int> getInput(string str){
     vector<int> numbers;
-    for (int i = 0; i < str.length(); ++i){
-        if(isdigit(str[i])){
-            int num = int(str[i]) - 48;
-            numbers.push_back(num);
-        }
+    std::istringstream stream(str);
+    int num;
+    while (stream >> num) {
+        numbers.push_back(num);
     }
     return numbers;
 }
@@ -139,10 +146,13 @@ bool checkBoard(const map<int, bool> &board, const vector<int> &numbs){
 }
 
 // Returns true if all elements of board are true
-bool win(const map<int, bool> &board){
-    return accumulate(board.begin(), board.end(), true, [](bool result, const std::pair<const int, bool>& p) {
+pair<bool, int> win(const map<int, bool> &board){
+    return make_pair(accumulate(board.begin(), board.end(), true, [](bool result, const std::pair<const int, bool>& p) {
         return result && p.second; // return for lambda
-    });
+    }), accumulate(board.begin(), board.end(), 0, [](int total, const std::pair<const int, bool> &p){
+        if(!p.second) return total += p.first;
+        else return total = 0;
+    }));
 }
 
 // Puts the selected numbers down
@@ -156,14 +166,7 @@ void shut(map<int, bool> &board, const vector<int> &numbs){
 // else will return false allowing user to give new move
 bool getMove(map<int, bool> &board, const string &str, int roll){
     int total = 0;
-    vector<int> numbers;
-
-    for(char ch: str){
-        if(isdigit(ch)){
-            numbers.push_back(ch - '0');
-            total += ch - '0';
-        }
-    }
+    vector<int> numbers = getInput(str);
 
     // Checking for duplicate entries
     // Ex: roll of 8, cannot be satisfied by "4 4", since theres only one 4 tile
@@ -178,7 +181,11 @@ bool getMove(map<int, bool> &board, const string &str, int roll){
             return false;
         }
     }
-    
+
+    // Get total
+    for (int num : numbers) {
+        total += num;
+    }
 
     // If move total doesn't equal the roll total, not valid
     if(total != roll){
