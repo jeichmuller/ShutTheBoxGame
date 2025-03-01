@@ -33,6 +33,21 @@ int main(){
     srand(time(nullptr));
     
 
+    /*
+    // debug
+    map<int, bool> board = {
+        {1, false}, {2, false}, {3, true}, {4, false}, {5, false}, {6, true},
+        {7, true}, {8, true}, {9, true}, {10, false}, {11, false}, {12, false}
+    };
+
+    int roll = 7;
+    if (possibleMove(board, roll)) {
+        cout << "A valid move exists for roll " << roll << endl;
+    } else {
+        cout << "No valid move exists for roll " << roll << endl;
+    }
+    */
+    
     int dice1, dice2;
     dice1 = diceRoll();
     dice2 = diceRoll();
@@ -42,14 +57,17 @@ int main(){
     
 
     bool game = true;
-
+    pair<bool, int> p;
     while(game){
         dice1 = diceRoll();
         dice2 = diceRoll();
 
         int roll = dice1 + dice2;
         if(!possibleMove(board, roll)){
-            continue;
+            cout << "You rolled " << dice1 << " and " << dice2 << endl;
+            p = win(board);
+            cout << "You lose! You had a score of " << p.second << endl;
+            break;
         }
         int total = 0;
 
@@ -60,13 +78,12 @@ int main(){
         do{
             string str; 
             getline(cin, str);
-            // Still need to prevent choosing double the same number to put down
             if(!getMove(board, str, roll)){
                 cout << "Give new numbers, needs to equal " << roll << endl;
                 valid = false;
             }else {
                 valid = true;
-                pair<bool, int> p = win(board);
+                p = win(board);
                 if(p.first){
                     cout << "Congratulations you won!" << endl;
                     cout << "Score of " << p.second << endl;
@@ -78,11 +95,11 @@ int main(){
         }while(!valid);
         
     }
-    pair<bool, int> p = win(board);
     if(!p.first){
         cout << "You lost with a score of " << p.second << endl;
         game = false;
     }
+        
 }
 
 // Checks if there are any moves the user can currently make with a given roll
@@ -95,28 +112,25 @@ bool possibleMove(const map<int, bool> &board, int roll){
         }
     }
 
-    if(findComb(remainingInt, roll,0,0)){
-        return true;
-    }else{
-        return false;
-    }
+    return findComb(remainingInt, roll, 0, 0);
 }
 
 // Checks if theres a combination of remaining integers that can equal the roll
 bool findComb(const vector<int> &remainingInt, int roll, int sum = 0, size_t start = 0){
+
     if (sum == roll) {
         return true;
     }
 
-    if (sum > roll || start >= remainingInt.size()) {
-        return false;
+    for (size_t i = start; i < remainingInt.size(); ++i) {
+        if (sum + remainingInt[i] <= roll) {
+            if (findComb(remainingInt, roll, sum + remainingInt[i], i + 1)) {
+                return true;
+            }
+        }
     }
 
-    if (findComb(remainingInt, roll, sum + remainingInt[start], start + 1)) {
-        return true;
-    }
-
-    return findComb(remainingInt, roll, sum, start + 1);
+    return false;
 }
 
 // Rolls dice, 1-6
@@ -148,10 +162,10 @@ bool checkBoard(const map<int, bool> &board, const vector<int> &numbs){
 // Returns true if all elements of board are true
 pair<bool, int> win(const map<int, bool> &board){
     return make_pair(accumulate(board.begin(), board.end(), true, [](bool result, const std::pair<const int, bool>& p) {
-        return result && p.second; // return for lambda
+        return result && p.second; 
     }), accumulate(board.begin(), board.end(), 0, [](int total, const std::pair<const int, bool> &p){
         if(!p.second) return total += p.first;
-        else return total = 0;
+        else return total;
     }));
 }
 
