@@ -37,7 +37,7 @@ int main(){
     // debug
     map<int, bool> board = {
         {1, false}, {2, false}, {3, true}, {4, false}, {5, false}, {6, true},
-        {7, true}, {8, true}, {9, true}, {10, false}, {11, false}, {12, false}
+        {7, true}, {8, true}, {9, true}
     };
 
     int roll = 7;
@@ -53,7 +53,7 @@ int main(){
     dice2 = diceRoll();
 
 
-    map<int, bool> board = {{1, false}, {2, false}, {3, false}, {4, false}, {5, false}, {6, false}, {7, false}, {8, false}, {9, false}, {10, false}, {11, false}, {12,false}};
+    map<int, bool> board = {{1, false}, {2, false}, {3, false}, {4, false}, {5, false}, {6, false}, {7, false}, {8, false}, {9, false}};
     
 
     bool game = true;
@@ -63,17 +63,20 @@ int main(){
         dice2 = diceRoll();
 
         int roll = dice1 + dice2;
+
+        print(board);
+
         if(!possibleMove(board, roll)){
             cout << "You rolled " << dice1 << " and " << dice2 << endl;
             p = win(board);
             cout << "You lose! You had a score of " << p.second << endl;
             break;
         }
-        int total = 0;
 
-        print(board);
         cout << "You rolled " << dice1 << " and " << dice2 << ". What numbers would you like to put down? " << endl;
         cout << "Roll: " << roll << endl;
+
+        int total = 0;
         bool valid = true;
         do{
             string str; 
@@ -90,10 +93,9 @@ int main(){
                     game = false;
                     break;
                 }
-                cout << "The board: " << endl;
             }
         }while(!valid);
-        
+        cout << endl;
     }
     if(!p.first){
         cout << "You lost with a score of " << p.second << endl;
@@ -187,6 +189,10 @@ bool getMove(map<int, bool> &board, const string &str, int roll){
     std::map<int, int> countMap;
     for(int num : numbers){
         ++countMap[num];
+        if (num > 9) {
+            cout << "You cannot input numbers greater than 9!" << endl;
+            return false;
+        }
     }
     // If any number is used more than once, return false
     for (const auto& entry : countMap) {
