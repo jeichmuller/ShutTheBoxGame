@@ -9,6 +9,7 @@
 #include <cctype>
 #include <numeric>
 #include <sstream>
+#include <algorithm>
 
 using std::cout; using std::cin; using std::endl;
 using std::map;
@@ -47,61 +48,84 @@ int main(){
         cout << "No valid move exists for roll " << roll << endl;
     }
     */
-    
-    int dice1, dice2;
-    dice1 = diceRoll();
-    dice2 = diceRoll();
+    vector<int> scores;
+    bool again = false; 
+    do{
+        again = false;
 
 
-    map<int, bool> board = {{1, false}, {2, false}, {3, false}, {4, false}, {5, false}, {6, false}, {7, false}, {8, false}, {9, false}};
-    
-
-    bool game = true;
-    pair<bool, int> p;
-    while(game){
+        int dice1, dice2;
         dice1 = diceRoll();
         dice2 = diceRoll();
 
-        int roll = dice1 + dice2;
 
-        print(board);
+        map<int, bool> board = {{1, false}, {2, false}, {3, false}, {4, false}, {5, false}, {6, false}, {7, false}, {8, false}, {9, false}};
+        
 
-        if(!possibleMove(board, roll)){
-            cout << "You rolled " << dice1 << " and " << dice2 << endl;
-            p = win(board);
-            cout << "You lose! You had a score of " << p.second << endl;
-            break;
+        bool game = true;
+        pair<bool, int> p;
+        while(game){
+            dice1 = diceRoll();
+            dice2 = diceRoll();
+
+            int roll = dice1 + dice2;
+
+            print(board);
+
+            if(!possibleMove(board, roll)){
+                cout << "You rolled " << dice1 << " and " << dice2 << endl;
+                p = win(board);
+                cout << "You lose! You had a score of " << p.second << endl;
+                break;
+            }
+
+            cout << "You rolled " << dice1 << " and " << dice2 << ". What numbers would you like to put down? " << endl;
+            cout << "Roll: " << roll << endl;
+
+            int total = 0;
+            bool valid = true;
+            do{
+                string str; 
+                getline(cin, str);
+                if(!getMove(board, str, roll)){
+                    cout << "Give new numbers, needs to equal " << roll << endl;
+                    valid = false;
+                }else {
+                    valid = true;
+                    p = win(board);
+                    if(p.first){
+                        cout << "Congratulations you won!" << endl;
+                        cout << "Score of " << p.second << endl;
+                        game = false;
+                        scores.push_back(p.second);
+                        break;
+                    }
+                }
+            }while(!valid);
+            cout << endl;
+        }
+        if(!p.first){
+            cout << "You lost with a score of " << p.second << endl;
+            game = false;
+            scores.push_back(p.second);
         }
 
-        cout << "You rolled " << dice1 << " and " << dice2 << ". What numbers would you like to put down? " << endl;
-        cout << "Roll: " << roll << endl;
 
-        int total = 0;
-        bool valid = true;
-        do{
-            string str; 
-            getline(cin, str);
-            if(!getMove(board, str, roll)){
-                cout << "Give new numbers, needs to equal " << roll << endl;
-                valid = false;
-            }else {
-                valid = true;
-                p = win(board);
-                if(p.first){
-                    cout << "Congratulations you won!" << endl;
-                    cout << "Score of " << p.second << endl;
-                    game = false;
-                    break;
-                }
-            }
-        }while(!valid);
+        cout << "Would you like to play again? (y/n) ";
+        string playAgain;
+        getline(cin, playAgain);
+        if(playAgain[0] == 'y' || playAgain[0] == 'Y'){
+            again = true;
+        }
         cout << endl;
+    }while(again);
+
+    std::sort(scores.begin(), scores.end());
+    cout << "Your highscores were: " << endl;
+    for(int i = 0; i < scores.size() - 10; ++i){
+        cout << i + 1 << ": " << scores[i] <<endl;
     }
-    if(!p.first){
-        cout << "You lost with a score of " << p.second << endl;
-        game = false;
-    }
-        
+
 }
 
 // Checks if there are any moves the user can currently make with a given roll
